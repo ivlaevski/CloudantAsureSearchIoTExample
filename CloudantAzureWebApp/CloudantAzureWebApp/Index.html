@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Cloudant Azure Web App</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>
+        var map;
+        var myLatLng = { lat: 40, lng: -111 };
+        var image = 'https://developers.google.com/maps/documentation/javascript/examples/full/images/beachflag.png';
+
+
+        $(document).ready(function () {
+            $("#dataReload").click(function () {
+                $.getJSON("./api/errors", function (data) {
+                    var items = [];
+                    $.each(JSON.parse(data), function (key, val) {
+                        items.push("<li>" + key + " - " + val + "</li>");
+                    });
+
+                    $("<ul/>", {
+                        "class": "my-new-list",
+                        html: items.join("")
+                    }).appendTo("#div1");
+                });
+
+
+                $.getJSON("./api/records", function (data) {
+                    var items = [];
+                    $.each(JSON.parse(data), function (key, val) {
+                        items.push("<li>" + key + " - " + val + "</li>");
+                    });
+
+                    $("<ul/>", {
+                        "class": "my-new-list",
+                        html: items.join("")
+                    }).appendTo("#div2");
+                });
+
+                $.getJSON("./api/city", function (data) {
+                    var items = [];
+                    $.each(JSON.parse(data), function (key, val) {
+                        items.push("<li>" + key + " - " + val + "</li>");
+                    });
+
+                    $("<ul/>", {
+                        "class": "my-new-list",
+                        html: items.join("")
+                    }).appendTo("#div3");
+                });
+
+                $.getJSON("./api/address", function (data) {
+                    var items = JSON.parse(data);
+                    $.each(items, function (key, val) {
+                        var marker = new google.maps.Marker({
+                            position: { lat: val.fields.lat, lng: val.fields.lon },
+                            map: map,
+                            title: val.fields.city
+                        });
+                    });
+                });
+            });
+
+            $("#textSearch").click(function () {
+                $.getJSON("./api/messages/" + $("#textToSearch").val(), function (data) {
+                    var items = JSON.parse(data);
+                    $.each(items, function (key, val) {
+                        var marker = new google.maps.Marker({
+                            position: { lat: val.fields.lat, lng: val.fields.lon },
+                            map: map,
+                            title: val.fields.city,
+                            icon: image
+                        });
+                        var infowindow = new google.maps.InfoWindow({
+                            content: val.fields.userMessage
+                        });                        
+                        marker.addListener('click', function () {
+                            infowindow.open(map, marker);
+                        });
+                    });
+                });
+            });
+        });
+
+        function initMap() {
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 6,
+                center: myLatLng
+            });
+        }
+    </script>
+    <script async defer
+            src="https://maps.googleapis.com/maps/api/js?key=[YOUR_API_KEY]&callback=initMap">
+    </script>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            height: 100%;
+        }
+
+        #popupInfo {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            width: 25%;
+            height: 50%;
+            background-color: white;
+            padding: 20px;
+        }
+
+        #popupSearch {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 25%;
+            height: 30px;
+            background-color: white;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="popupInfo">
+        <button id="dataReload">Get External Content</button>
+        <div>
+            <h2>Errors count</h2>
+            <div id="div1">
+            </div>
+        </div>
+        <div>
+            <h2>Sensor Record count</h2>
+            <div id="div2">
+            </div>
+        </div>
+        <div>
+            <h2>City count</h2>
+            <div id="div3">
+            </div>
+        </div>
+    </div>
+    <div id="popupSearch">
+        <span>User Message Search</span>
+        <table>
+            <tr>
+                <td>
+                    <input id="textToSearch" type="text" style="width:150px"/>
+                </td>
+                <td>
+                    <button id="textSearch">Search</button>
+                </td>
+            </tr>
+        </table>
+        
+    </div>
+</body>
+</html>
